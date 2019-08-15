@@ -12,19 +12,19 @@ import (
 
 func main() {
 
+	fmt.Println()
 	fmt.Println("===========================================")
 	fmt.Println("Sending request to login route ...")
-	res, err := http.Get("https://cas.usherbrooke.ca/login")
-	fmt.Println("Response arrived !")
 	fmt.Println("===========================================")
 
+	res, err := http.Get("https://cas.usherbrooke.ca/login")
 	if err != nil {
 		fmt.Println("There was an error while trying to get to authentication service from UdeS")
 		return
 	}
+	defer res.Body.Close()
 
 	document, err := html.Parse(res.Body)
-	defer res.Body.Close()
 
 	if err != nil {
 		fmt.Println("There was an error parsing the request's body")
@@ -70,10 +70,11 @@ func main() {
 		req.AddCookie(cookie)
 	}
 
-	fmt.Println(form)
+	fmt.Println()
 	fmt.Println("===========================================")
 	fmt.Println("Sending request to authenticate")
 	fmt.Println("===========================================")
+	fmt.Println()
 
 	client := http.Client{}
 
@@ -91,8 +92,13 @@ func main() {
 		return
 	}
 
+	var body []byte
+
+	_, err = res.Body.Read(body)
+
 	fmt.Println("response headers : ", res.Header)
 	fmt.Println("response status : ", res.Status)
 	fmt.Println("response set-cookie : ", res.Header.Get("Set-Cookie"))
 	fmt.Println("response cookies : ", res.Cookies())
+	fmt.Println("response body : ", string(body))
 }

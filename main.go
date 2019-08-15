@@ -35,6 +35,8 @@ func main() {
 	form := url.Values{}
 	form.Set("username", "gofg2301")
 	form.Set("password", "Goffart2006")
+	form.Set("_eventId", "submit")
+	form.Set("submit", "")
 
 	var f func(*html.Node)
 
@@ -96,9 +98,8 @@ func main() {
 
 	_, err = res.Body.Read(body)
 
-	fmt.Println("response headers : ", res.Header)
 	fmt.Println("response status : ", res.Status)
-	fmt.Println("response set-cookie : ", res.Header.Get("Set-Cookie"))
-	fmt.Println("response cookies : ", res.Cookies())
-	fmt.Println("response body : ", string(body))
+	for i, cookie := range res.Cookies() {
+		fmt.Println("\t Cookie ", i, " : ", cookie)
+	}
 }

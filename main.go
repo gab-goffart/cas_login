@@ -6,11 +6,21 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"flag"
 
 	"golang.org/x/net/html"
 )
 
 func main() {
+	username := flag.String("u", "", "-u <username>")
+	password := flag.String("p", "", "-p <password>")
+
+	flag.Parse()
+
+	if *username == "" || *password == "" {
+		fmt.Println("-u and -p are required")
+		return;
+	}
 
 	fmt.Println()
 	fmt.Println("===========================================")
@@ -33,8 +43,8 @@ func main() {
 
 	cookies := res.Cookies()
 	form := url.Values{}
-	form.Set("username", "gofg2301")
-	form.Set("password", "Goffart2006")
+	form.Set("username", *username)
+	form.Set("password", *password)
 	form.Set("_eventId", "submit")
 	form.Set("submit", "")
 

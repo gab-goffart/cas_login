@@ -1,12 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"flag"
 
 	"golang.org/x/net/html"
 )
@@ -19,7 +19,7 @@ func main() {
 
 	if *username == "" || *password == "" {
 		fmt.Println("-u and -p are required")
-		return;
+		return
 	}
 
 	fmt.Println()
@@ -103,10 +103,6 @@ func main() {
 		fmt.Println("Could not read body of response")
 		return
 	}
-
-	var body []byte
-
-	_, err = res.Body.Read(body)
 
 	fmt.Println("response status : ", res.Status)
 	for i, cookie := range res.Cookies() {

@@ -15,6 +15,7 @@
 *.dll
 *.so
 *.dylib
+web_api_go
 
 # Test binary, built with `go test -c`
 *.test

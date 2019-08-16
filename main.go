@@ -22,9 +22,11 @@ func main() {
 		return
 	}
 
+	var cookies []*http.Cookie
+
 	fmt.Println()
 	fmt.Println("===========================================")
-	fmt.Println("Sending request to login route ...")
+	fmt.Println("Sending request to login route")
 	fmt.Println("===========================================")
 
 	res, err := http.Get("https://cas.usherbrooke.ca/login")
@@ -41,7 +43,7 @@ func main() {
 		return
 	}
 
-	cookies := res.Cookies()
+	cookies = append(cookies, res.Cookies()...)
 	form := url.Values{}
 	form.Set("username", *username)
 	form.Set("password", *password)
@@ -97,15 +99,99 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	defer res.Body.Close()
+	res.Body.Close()
 
 	if err != nil {
 		fmt.Println("Could not read body of response")
 		return
 	}
 
-	fmt.Println("response status : ", res.Status)
-	for i, cookie := range res.Cookies() {
-		fmt.Println("\t Cookie ", i, " : ", cookie)
+	for _, cookie := range res.Cookies() {
+		isPresent := false
+		for _, oldCookie := range cookies {
+			if oldCookie.String() == cookie.String() {
+				isPresent = true
+			}
+		}
+
+		if isPresent == false {
+			cookies = append(cookies, cookie)
+		}
 	}
+
+	fmt.Println("===========================================")
+	fmt.Println("Trying to get results for session H19")
+	fmt.Println("===========================================")
+	fmt.Println()
+
+	req, err = http.NewRequest("GET", "https://cas.usherbrooke.ca/login?service=https%3A%2F%2Fwww.gel.usherbrooke.ca%2Fgrille-notes%2Fapi%2Fgrid%2Fresults%3Ftrimester%3DH19", nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for _, cookie := range cookies {
+		req.AddCookie(cookie)
+	}
+
+	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Add("Connection", "keep-alive")
+	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+
+	fmt.Println(req.Header)
+
+	res, err = client.Do(req)
+	if err != nil || res.StatusCode != 302 {
+		fmt.Println("Error trying to GET for grades authentication", err)
+		return
+	}
+	defer res.Body.Close()
+
+	location, err := res.Location()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	req, err = http.NewRequest("GET", location.String(), nil)
+	if err != nil {
+		fmt.Println("Error trying to create a request")
+		return
+	}
+
+	res, err = client.Do(req)
+	if err != nil {
+		fmt.Println("Error fetching for the link")
+		return
+	}
+	res.Body.Close()
+
+	cookies = res.Cookies()
+
+	req, err = http.NewRequest("GET", "https://gel.usherbrooke.ca/grille-notes/api/grid/results?trimester=H19", nil)
+
+	for _, cookie := range cookies {
+		req.AddCookie(cookie)
+	}
+
+	res, err = client.Do(req)
+	if err != nil {
+		fmt.Println("Error fetching for the grades")
+		return
+	}
+
+	var body []byte
+	nbBytes, err := res.Body.Read(body)
+	if err != nil {
+		fmt.Println("Error parsing the body")
+		return
+	}
+
+	if nbBytes == 0 {
+		fmt.Println("body is of size 0, authentication probably failed ...")
+		return
+	}
+
+	fmt.Println("Grades : ", string(body))
+
 }
